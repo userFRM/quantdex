@@ -33,8 +33,8 @@ sys.path.insert(0, str(_PROJECT_ROOT))
 
 _LIB_AVAILABLE = False
 try:
-    from src.turbo_quant import TurboQuant
-    from src.metrics import variance_fraction as _lib_variance_fraction
+    from quantdex.turbo_quant import TurboQuant
+    from quantdex.metrics import variance_fraction as _lib_variance_fraction
     _LIB_AVAILABLE = True
 except ImportError as exc:
     warnings.warn(

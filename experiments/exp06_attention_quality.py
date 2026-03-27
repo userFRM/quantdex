@@ -33,9 +33,9 @@ sys.path.insert(0, str(_PROJECT_ROOT))
 
 _LIB_AVAILABLE = False
 try:
-    from src.turbo_quant import TurboQuant
-    from src.sub_linear_attention import CoarseToFine, CodeTrie, BlockPruning
-    from src.metrics import (recall_at_k, softmax_mass_captured,
+    from quantdex.turbo_quant import TurboQuant
+    from quantdex.sub_linear_attention import CoarseToFine, CodeTrie, BlockPruning
+    from quantdex.metrics import (recall_at_k, softmax_mass_captured,
                              attention_output_error)
     _LIB_AVAILABLE = True
 except ImportError as exc:

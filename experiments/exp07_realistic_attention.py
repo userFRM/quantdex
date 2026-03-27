@@ -37,10 +37,10 @@ import matplotlib.pyplot as plt
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_PROJECT_ROOT))
 
-from src.turbo_quant import TurboQuant
-from src.sub_linear_attention import CoarseToFine, CodeTrie, BlockPruning
-from src.metrics import recall_at_k, softmax_mass_captured, attention_output_error
-from src.attention_patterns import RealisticAttentionGenerator, compute_ground_truth
+from quantdex.turbo_quant import TurboQuant
+from quantdex.sub_linear_attention import CoarseToFine, CodeTrie, BlockPruning
+from quantdex.metrics import recall_at_k, softmax_mass_captured, attention_output_error
+from quantdex.attention_patterns import RealisticAttentionGenerator, compute_ground_truth
 
 # ---------------------------------------------------------------------------
 # Plot style

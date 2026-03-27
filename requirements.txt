@@ -1,3 +1,4 @@
-numpy>=2.0
-scipy>=1.10
-matplotlib>=3.8
+# Core (tested: Python 3.14.3, Ubuntu 22.04)
+numpy==2.4.2
+scipy==1.17.1
+matplotlib==3.10.8

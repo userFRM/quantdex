@@ -33,9 +33,9 @@ sys.path.insert(0, str(_PROJECT_ROOT))
 
 _LIB_AVAILABLE = False
 try:
-    from src.turbo_quant import TurboQuant
-    from src.sub_linear_attention import CodeTrie as _LibCodeTrie
-    from src.metrics import recall_at_k
+    from quantdex.turbo_quant import TurboQuant
+    from quantdex.sub_linear_attention import CodeTrie as _LibCodeTrie
+    from quantdex.metrics import recall_at_k
     _LIB_AVAILABLE = True
 except ImportError as exc:
     warnings.warn(
@@ -563,7 +563,7 @@ def test_comparison(n: int, d: int, b: int, k: int, n_repeats: int,
             })
 
             # 2. Coarse-to-fine (via library)
-            from src.sub_linear_attention import CoarseToFine as _LibCoarseToFine
+            from quantdex.sub_linear_attention import CoarseToFine as _LibCoarseToFine
             ctf = _LibCoarseToFine(tq, codes, norms)
             for label, rounds_config in [
                 ('c2f_8_128', [(8, min(5 * k, n)), (d, k)]),

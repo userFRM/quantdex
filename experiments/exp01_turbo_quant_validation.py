@@ -33,8 +33,8 @@ sys.path.insert(0, str(_PROJECT_ROOT))
 
 _LIB_AVAILABLE = False
 try:
-    from src.turbo_quant import TurboQuant, lloyd_max_mse
-    from src.metrics import mse_reconstruction, inner_product_correlation
+    from quantdex.turbo_quant import TurboQuant, lloyd_max_mse
+    from quantdex.metrics import mse_reconstruction, inner_product_correlation
     _LIB_AVAILABLE = True
 except ImportError as exc:
     warnings.warn(

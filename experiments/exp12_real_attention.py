@@ -173,9 +173,9 @@ def analyze_attention_sparsity(attention_weights, config):
 
 def run_quantdex_on_real_data(attention_data, attention_weights, config):
     """Run TurboQuant + C2F on real attention KV data."""
-    from src.turbo_quant import TurboQuant
-    from src.sub_linear_attention import CoarseToFine
-    from src.metrics import recall_at_k
+    from quantdex.turbo_quant import TurboQuant
+    from quantdex.sub_linear_attention import CoarseToFine
+    from quantdex.metrics import recall_at_k
 
     head_dim = config['head_dim']
     # Pad to power of 2 if needed for FWHT

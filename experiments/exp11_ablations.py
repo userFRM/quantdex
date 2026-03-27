@@ -24,7 +24,7 @@ from exp09_fused_cuda import (
     quantize_gpu, gpu_time_ms,
     bench_brute_force_gemm, bench_brute_force_fused, bench_c2f_fused,
 )
-from src.attention_patterns import RealisticAttentionGenerator
+from quantdex.attention_patterns import RealisticAttentionGenerator
 
 FIGURES_DIR = os.path.join(os.path.dirname(__file__), '..', 'figures')
 RESULTS_DIR = os.path.join(os.path.dirname(__file__), 'results')

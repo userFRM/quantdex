@@ -666,8 +666,8 @@ if __name__ == "__main__":
     import time
     import sys
     sys.path.insert(0, "/home/theta-gamma/quantdex")
-    from src.turbo_quant import TurboQuant
-    from src.metrics import recall_at_k, softmax_mass_captured
+    from quantdex.turbo_quant import TurboQuant
+    from quantdex.metrics import recall_at_k, softmax_mass_captured
 
     print("=" * 70)
     print("Sub-linear attention self-test")

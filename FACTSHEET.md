@@ -199,7 +199,7 @@ This project started from a close reading of TurboQuant (Google, April 2025), wh
 5. Built 7,075 lines of code (library + experiments + paper)
 6. Ran 6 experiments producing 19 figures
 7. Validated core claims on synthetic data
-8. Pushed to private GitHub repository
+8. Pushed to GitHub repository
 
 **Days 2-3 (GPU validation):**
 9. Built fused CUDA kernels (2 kernel launches vs 16+ in Python)
@@ -228,4 +228,4 @@ This project started from a close reading of TurboQuant (Google, April 2025), wh
 ---
 
 *Last updated: March 27, 2026 (GPU benchmarks added)*
-*Repository: github.com/userFRM/quantdex (private)*
+*Repository: github.com/userFRM/quantdex*

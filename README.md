@@ -53,7 +53,7 @@ Extracted attention from TinyLlama-1.1B (22 layers, 4 heads, d=64, 370 tokens):
 ## Repository Structure
 
 ```
-src/
+quantdex/
   turbo_quant.py          # TurboQuant implementation (RHT + Lloyd-Max)
   sub_linear_attention.py # CoarseToFine, CodeTrie, BlockPruning
   attention_patterns.py   # Realistic LLM attention generator
