@@ -1,0 +1,105 @@
+{
+  "test1_summary_size": {
+    "10000": {
+      "n_blocks": 40,
+      "size_bytes": 40960,
+      "size_kb": 40.0
+    },
+    "50000": {
+      "n_blocks": 196,
+      "size_bytes": 200704,
+      "size_kb": 196.0
+    },
+    "100000": {
+      "n_blocks": 391,
+      "size_bytes": 400384,
+      "size_kb": 391.0
+    },
+    "500000": {
+      "n_blocks": 1954,
+      "size_bytes": 2000896,
+      "size_kb": 1954.0
+    },
+    "1000000": {
+      "n_blocks": 3907,
+      "size_bytes": 4000768,
+      "size_kb": 3907.0
+    }
+  },
+  "test2_pruning_effectiveness": {
+    "random": {
+      "8": 0.0,
+      "16": 0.0,
+      "32": 0.0,
+      "64": 0.0,
+      "128": 0.0
+    },
+    "kappa_50": {
+      "8": 0.0,
+      "16": 0.0,
+      "32": 0.0,
+      "64": 0.0,
+      "128": 0.0
+    },
+    "kappa_200": {
+      "8": 0.0,
+      "16": 0.0,
+      "32": 0.0,
+      "64": 0.0,
+      "128": 0.0
+    }
+  },
+  "test3_end_to_end": {
+    "10000": {
+      "bf_time_ms": 22.009747626725584,
+      "block_time_ms": 221.54904279159382,
+      "speedup": 0.09934481029299529,
+      "recall": 1.0,
+      "keys_scored_frac": 1.0
+    },
+    "50000": {
+      "bf_time_ms": 68.77317761536688,
+      "block_time_ms": 1134.380087594036,
+      "speedup": 0.060626220759244266,
+      "recall": 1.0,
+      "keys_scored_frac": 1.0
+    },
+    "100000": {
+      "bf_time_ms": 129.22429299214855,
+      "block_time_ms": 1887.253394012805,
+      "speedup": 0.06847214762050748,
+      "recall": 1.0,
+      "keys_scored_frac": 1.0
+    },
+    "500000": {
+      "bf_time_ms": 486.15627558901906,
+      "block_time_ms": 9413.707196200266,
+      "speedup": 0.05164344561144311,
+      "recall": 1.0,
+      "keys_scored_frac": 1.0
+    },
+    "1000000": {
+      "bf_time_ms": 849.8846593894996,
+      "block_time_ms": 17047.441864805296,
+      "speedup": 0.049854087559265965,
+      "recall": 1.0,
+      "keys_scored_frac": 1.0
+    }
+  },
+  "test4_memory_reads": {
+    "brute_force_bytes": 51200000.0,
+    "summary_table_bytes": 400384.0,
+    "surviving_blocks_bytes": 51249152.0,
+    "total_block_pruning_bytes": 51649536.0,
+    "bandwidth_savings_pct": -0.878000000000001
+  },
+  "total_time_seconds": 402.28469252586365,
+  "parameters": {
+    "d": 128,
+    "b": 2,
+    "k": 100,
+    "block_size": 256,
+    "n_repeats": 5,
+    "library_available": true
+  }
+}

@@ -1,0 +1,21 @@
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+# Keep paper PDF accessible, ignore LaTeX temp PDFs
+# *.pdf
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+experiments/results/
+.DS_Store
