@@ -48,7 +48,7 @@ At 1 million words, the model spends **12.5 milliseconds** just *reading memory*
 
 **This is the memory bandwidth wall.** More powerful GPUs don't help much — the bottleneck is the physical speed of memory, not computation.
 
-**With QuantDex:** At 1M tokens (quantized), our fused CUDA kernel reduces the attention step from 4.32 ms to 1.11 ms — a **3.9x speedup** at 100% recall. At 2M tokens: 9.30 ms → 1.65 ms — a **5.6x speedup**.
+**With QuantDex:** At 1M tokens (quantized), our fused CUDA kernel reduces the attention step from 4.28 ms to 1.09 ms — a **3.9x speedup** at 100% recall. At 2M tokens: 9.30 ms → 1.66 ms — a **5.6x speedup at 99% recall** (or **4.9x at 100% recall** with m=16).
 
 ---
 
@@ -87,10 +87,11 @@ At 1 million words, the model spends **12.5 milliseconds** just *reading memory*
 4. **Full read.** Only read the complete data for the small number of survivors.
 
 **The result (on realistic data, validated on GPU):**
-- 100% recall — we find all the important vectors
-- **5.6x wall-clock speedup** on GPU (RTX 3070, 2M keys, d=128)
-- Speedup grows with sequence length (0.97x at 100K → 5.6x at 2M)
+- **5.62x wall-clock speedup at 99% recall** on GPU (RTX 3070, 2M keys, d=128, m=32)
+- **4.89x speedup at 100% recall** (with m=16)
+- Speedup grows with sequence length (0.99x at 100K → 5.6x at 2M)
 - Speedup grows with head dimension (1.8x at d=64 → 5.0x at d=512)
+- **100% recall on all 48 heads of real TinyLlama-1.1B attention**
 - No training, no extra data structures — works on top of TurboQuant directly
 
 ---
@@ -99,13 +100,13 @@ At 1 million words, the model spends **12.5 milliseconds** just *reading memory*
 
 | Keys (n) | Brute Force GEMM | C2F (m=32) | Speedup | Recall |
 |---|---|---|---|---|
-| 50K | 0.55 ms | 0.75 ms | 0.73x | 100% |
-| 100K | 0.73 ms | 0.75 ms | 0.97x | 99% |
-| 500K | 2.29 ms | 0.85 ms | 2.69x | 99% |
-| 1M | 4.32 ms | 1.11 ms | 3.90x | 100% |
-| 2M | 9.30 ms | 1.65 ms | 5.62x | 100% |
+| 50K | 0.55 ms | 0.73 ms | 0.75x | 98% |
+| 100K | 0.77 ms | 0.78 ms | 0.99x | 99% |
+| 500K | 2.30 ms | 0.86 ms | 2.68x | 100% |
+| 1M | 4.28 ms | 1.09 ms | 3.91x | 100% |
+| 2M | 9.30 ms | 1.66 ms | 5.62x | 99% |
 
-### Dimension scaling (n=1M, m=32, all 100% recall):
+### Dimension scaling (n=1M, m=32, all >=99% recall):
 | d | Speedup |
 |---|---|
 | 64 | 1.83x |
@@ -128,10 +129,11 @@ At 1 million words, the model spends **12.5 milliseconds** just *reading memory*
 | Code trie reads 20x fewer keys at 100% recall | Branch-and-bound on structured data | 500K reads vs 10M brute force |
 | Inner product error shrinks with dimension | Tested d = 32 to 4096 | Perfect O(1/d) scaling, slope = -1.00 |
 | Compression quality matches theory | MSE at 2-bit quantization | 0.1161 measured vs 0.1175 predicted (within 1%) |
-| **GPU wall-clock speedup is real** | **Fused CUDA kernel on RTX 3070, realistic attention** | **5.6x speedup at 100% recall (n=2M, d=128, m=32)** |
-| **Speedup scales with n** | **Benchmarked n from 50K to 2M** | **0.73x → 5.6x, crossover at ~100K** |
-| **Speedup scales with d** | **Benchmarked d from 64 to 512** | **1.8x → 5.0x, all at 100% recall** |
+| **GPU wall-clock speedup is real** | **Fused CUDA kernel on RTX 3070, realistic attention** | **5.62x speedup at 99% recall (n=2M, d=128, m=32); 4.89x at 100% recall (m=16)** |
+| **Speedup scales with n** | **Benchmarked n from 50K to 2M** | **0.75x → 5.62x, crossover at ~100K** |
+| **Speedup scales with d** | **Benchmarked d from 64 to 512** | **1.83x → 4.95x, all at >=99% recall** |
 | **Recall robust across m** | **Ablation: m from 8 to 64** | **100% recall for all m >= 8** |
+| **Works on real LLM attention** | **TinyLlama-1.1B, all 48 heads tested** | **100% recall on all heads, including m=8 (12.5% of coordinates)** |
 
 ### Honest Gaps (Updated)
 
@@ -139,7 +141,7 @@ At 1 million words, the model spends **12.5 milliseconds** just *reading memory*
 |---|---|---|
 | GPU wall-clock speedup | **CLOSED** | 5.6x proven on RTX 3070 with fused CUDA (exp10) |
 | Random data recall | **NOT A GAP** | Random attention has no structure by definition — no sub-linear algorithm can find heavy hitters that don't exist. This is a theorem, not a limitation. |
-| Real model attention patterns | **PARTIALLY CLOSED** | Realistic synthetic patterns (matching H2O/SnapKV sparsity statistics) achieve 100% recall. Remaining: validate on actual Llama-3 attention tensors (~2 weeks work) |
+| Real model attention patterns | **CLOSED** | 100% recall on all 48 heads of TinyLlama-1.1B (exp12). Real attention is sparser than synthetic (Gini up to 0.994). Remaining: scale to larger models (Llama-3 70B). |
 | Block pruning algorithm | Negative result | Bounds too loose on synthetic data. Retained as honest negative result in paper. |
 
 ---
@@ -148,7 +150,7 @@ At 1 million words, the model spends **12.5 milliseconds** just *reading memory*
 
 ### "Does this actually save money?"
 
-**Yes — GPU benchmarks now confirm real wall-clock savings.** On an RTX 3070 (a consumer GPU), we measured 5.6x speedup at 2M keys with 100% recall. This means:
+**Yes — GPU benchmarks now confirm real wall-clock savings.** On an RTX 3070 (a consumer GPU), we measured 5.62x speedup at 2M keys with 99% recall (or 4.89x at 100% recall with m=16). This means:
 - Same quality, ~5x faster attention for long contexts
 - Serve longer conversations on cheaper hardware
 - Or serve more users on the same hardware
@@ -176,7 +178,7 @@ Shorter context is lossy — you permanently lose information. Our method keeps 
 
 The math works. The GPU kernel works (5.6x speedup proven on hardware). What's needed:
 1. ~~Build GPU kernels~~ **DONE** — fused CUDA kernel with 2 kernel launches
-2. Validate on real LLM attention tensors (~2 weeks)
+2. ~~Validate on real LLM attention tensors~~ **DONE** — 100% recall on all 48 TinyLlama heads (exp12)
 3. Integration into an inference framework like vLLM or TensorRT-LLM (~1 month)
 
 Optimistically: 6-8 weeks from here to prototype. The critical path is framework integration, not algorithm validation.
@@ -202,7 +204,7 @@ This project started from a close reading of TurboQuant (Google, April 2025), wh
 **Days 2-3 (GPU validation):**
 9. Built fused CUDA kernels (2 kernel launches vs 16+ in Python)
 10. exp09: random data baseline (worst case — 8.8x speedup, 63% recall at 2M)
-11. exp10: realistic attention benchmark — **5.6x speedup at 100% recall (2M keys)**
+11. exp10: realistic attention benchmark — **5.62x speedup at 99% recall (2M keys, m=32)**
 12. exp11: ablation studies (m, d, b) — speedup scales with d up to 5.0x at d=512
 13. Updated paper with definitive GPU results
 

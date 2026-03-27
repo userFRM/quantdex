@@ -77,7 +77,8 @@ class CoarseToFine:
         self.codes_transposed = codes.T.copy()  # shape (d, n)
 
     def query(self, q: np.ndarray, k: int = 100,
-              rounds: Optional[List[Tuple[int, int]]] = None
+              rounds: Optional[List[Tuple[int, int]]] = None,
+              compute_diagnostics: bool = False
               ) -> Tuple[np.ndarray, np.ndarray, Dict]:
         """Multi-round coarse-to-fine attention.
 
@@ -92,23 +93,32 @@ class CoarseToFine:
               m    -- number of coordinates to use for scoring
               keep -- number of survivors to pass to the next round
             Default: [(8, 100*k), (24, 20*k), (d, k)]
+        compute_diagnostics : bool, default False
+            If True, compute brute-force scores (O(n*d)) to measure recall
+            and variance fractions.  For production use, leave this False
+            to keep the method sub-linear.
 
         Returns
         -------
         top_k_indices : ndarray, shape (k,), dtype int64
         top_k_scores : ndarray, shape (k,), dtype float64
         stats : dict
-            Diagnostic statistics: coords_read, keys_scored, recall, etc.
+            Diagnostic statistics: coords_read, keys_scored, etc.
+            If compute_diagnostics is True, also includes recall_at_k
+            and variance_fractions.
         """
         d = self.tq.d
         n = self.n
         k = min(k, n)
         if k == 0:
+            stats = {"coords_read": 0, "coords_read_fraction": 0.0,
+                     "n_survivors_per_round": [], "brute_force_cost": n * d}
+            if compute_diagnostics:
+                stats["recall_at_k"] = 1.0
+                stats["variance_fractions"] = []
             return (np.array([], dtype=np.int64),
                     np.array([], dtype=np.float64),
-                    {"coords_read": 0, "coords_read_fraction": 0.0,
-                     "recall_at_k": 1.0, "variance_fractions": [],
-                     "n_survivors_per_round": [], "brute_force_cost": n * d})
+                    stats)
 
         if rounds is None:
             m1 = min(8, d)
@@ -163,28 +173,28 @@ class CoarseToFine:
         top_k_indices = survivors[top_k_local]
         top_k_scores = scores[top_k_local]
 
-        # Compute brute-force for recall measurement
-        brute_scores = self._brute_force_scores(q_rot, levels)
-        true_top_k = np.argsort(brute_scores)[::-1][:k]
-
-        recall = len(np.intersect1d(top_k_indices, true_top_k)) / k
-
-        # Variance captured by each round
-        q_energy = np.sum(q_rot ** 2)
-        variance_fractions = []
-        for m, _ in rounds:
-            coords = coord_order[:m]
-            vf = np.sum(q_rot[coords] ** 2) / q_energy if q_energy > 0 else 0.0
-            variance_fractions.append(float(vf))
-
         stats = {
             "coords_read": total_coords_read,
             "coords_read_fraction": total_coords_read / (n * d),
-            "recall_at_k": recall,
-            "variance_fractions": variance_fractions,
             "n_survivors_per_round": [min(r[1], n) for r in rounds],
             "brute_force_cost": n * d,
         }
+
+        if compute_diagnostics:
+            # O(n*d) brute-force for recall measurement -- evaluation only
+            brute_scores = self._brute_force_scores(q_rot, levels)
+            true_top_k = np.argsort(brute_scores)[::-1][:k]
+            recall = len(np.intersect1d(top_k_indices, true_top_k)) / k
+            stats["recall_at_k"] = recall
+
+            # Variance captured by each round
+            q_energy = np.sum(q_rot ** 2)
+            variance_fractions = []
+            for m, _ in rounds:
+                coords = coord_order[:m]
+                vf = np.sum(q_rot[coords] ** 2) / q_energy if q_energy > 0 else 0.0
+                variance_fractions.append(float(vf))
+            stats["variance_fractions"] = variance_fractions
 
         return top_k_indices, top_k_scores, stats
 
@@ -688,7 +698,7 @@ if __name__ == "__main__":
     print(f"\n--- CoarseToFine (d={d}, n={n}, bits={bits}) ---")
     ctf = CoarseToFine(tq, codes, norms)
     t0 = time.perf_counter()
-    ctf_idx, ctf_scores, ctf_stats = ctf.query(query, k=k)
+    ctf_idx, ctf_scores, ctf_stats = ctf.query(query, k=k, compute_diagnostics=True)
     t_ctf = time.perf_counter() - t0
     ctf_recall = recall_at_k(true_topk, ctf_idx)
     ctf_mass = softmax_mass_captured(true_scores, ctf_idx, temperature=1.0)

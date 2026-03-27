@@ -8,7 +8,7 @@
 
 ## TL;DR
 
-Data-oblivious vector quantization (TurboQuant-style) compresses the KV cache **and** creates a search index — for free. We exploit this to skip most of the cache during attention, achieving **5.6x wall-clock GPU speedup at 100% recall** on realistic LLM attention patterns.
+Data-oblivious vector quantization (TurboQuant-style) compresses the KV cache **and** creates a search index — for free. We exploit this to skip most of the cache during attention, achieving **5.6x wall-clock GPU speedup at 99% recall** (or **4.9x at 100% recall**) on realistic LLM attention patterns.
 
 ## The Problem
 
@@ -24,14 +24,23 @@ A query's rotated coordinates have varying magnitudes. Reading only the top-*m* 
 
 | Metric | Value |
 |---|---|
-| GPU speedup (n=2M, d=128, m=32) | **5.6x at 100% recall** |
-| GPU speedup (n=1M) | 3.9x at 100% recall |
-| Speedup at d=512 | 5.0x at 100% recall |
+| GPU speedup (n=2M, d=128, m=32) | **5.62x at 99% recall** |
+| GPU speedup (n=2M, d=128, m=16) | **4.89x at 100% recall** |
+| GPU speedup (n=1M) | 3.91x at 100% recall |
+| Speedup at d=512 | 4.95x at >=99% recall |
 | Attention output error (C2F) | < 10⁻¹⁵ (machine precision) |
 | Compression (TurboQuant, b=2) | 0.1161 MSE (within 1% of theory) |
 | V(m) at m=17 (13% of d=128) | 50% variance captured |
 
 Speedup grows with both sequence length *n* and head dimension *d* — it gets better precisely where long-context LLMs operate.
+
+## Validated on Real LLM Attention
+
+Extracted attention from TinyLlama-1.1B (22 layers, 4 heads, d=64, 370 tokens):
+
+- **100% recall on all 48 tested heads** (including m=8, reading only 12.5% of coordinates)
+- Real attention is **sparser** than synthetic: Gini up to 0.994, 90% mass in 0.3% of keys
+- Deeper layers consistently show Gini > 0.9, confirming structured sparsity is fundamental
 
 ## Algorithms
 
@@ -57,6 +66,7 @@ experiments/
   exp09                   # Fused CUDA kernels (eliminates Python overhead)
   exp10                   # Definitive: fused CUDA + realistic attention
   exp11                   # Ablations (m, d, b)
+  exp12                   # Real LLM attention extraction (TinyLlama)
 
 paper/
   main.tex                # Full paper (18 pages, 6 theorems, 10 figures)
@@ -69,19 +79,21 @@ FACTSHEET.md              # Non-technical summary and FAQ
 ## Quick Start
 
 ```bash
-# Dependencies: numpy, scipy, matplotlib (+ cupy for GPU experiments)
-pip install numpy scipy matplotlib
+pip install -r requirements.txt              # CPU experiments
+pip install -r requirements-gpu.txt          # GPU experiments (NVIDIA)
+pip install -r requirements-llm.txt          # Real attention extraction
 
 # Run core validation
 python experiments/exp01_turbo_quant_validation.py
 
 # Run the headline experiment (requires NVIDIA GPU + CuPy)
-pip install cupy-cuda12x
 python experiments/exp10_definitive.py
 
 # Build the paper (requires texlive)
 cd paper && make
 ```
+
+Tested with: Python 3.14, NumPy 2.4.2, CuPy 14.0.1, CUDA 12.0, RTX 3070
 
 ## How It Works
 
@@ -129,4 +141,4 @@ cd paper && pdflatex main.tex && pdflatex main.tex && pdflatex main.tex
 
 ## License
 
-Research use. Not yet released under an open-source license.
+MIT License
